@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vice Cover Studio — Make GTA 6 Cover Art</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="brand">
+      <span class="brand-mark">★</span>
+      <span class="brand-name">VICE COVER STUDIO</span>
+      <span class="brand-sub">GTA 6-style cover maker</span>
+    </div>
+    <div class="top-actions">
+      <button id="undoBtn" type="button" title="Undo (Ctrl+Z)">↩ Undo</button>
+      <button id="redoBtn" type="button" title="Redo (Ctrl+Y)">↪ Redo</button>
+    </div>
+  </header>
+
+  <main id="workspace">
+    <section id="previewPane">
+      <canvas id="coverCanvas" width="1080" height="1080" aria-label="Cover preview"></canvas>
+      <p id="previewHint">Click a panel to select it, then drag it to pan. Use the zoom slider to crop.</p>
+      <div id="statusLine" role="status">Loading sample photos…</div>
+    </section>
+
+    <aside id="editorPane">
+      <section class="tool" id="photosTool">
+        <h2>1 · Photos</h2>
+        <label class="file-btn">+ Add photos from your machine
+          <input id="photoInput" type="file" accept="image/*" multiple>
+        </label>
+        <p class="hint">Or drop image files anywhere on this page. Photos never leave your machine.</p>
+        <div id="photoTray" class="tray"></div>
+        <div class="sample-row">
+          <button id="sampleBoulevard" type="button">Sample: Boulevard</button>
+          <button id="samplePier" type="button">Sample: Pier</button>
+        </div>
+      </section>
+
+      <section class="tool" id="layoutTool">
+        <h2>2 · Layout</h2>
+        <div id="layoutTray" class="tray"></div>
+      </section>
+
+      <section class="tool" id="gradeTool">
+        <h2>3 · Colour grade</h2>
+        <div id="gradeTray" class="tray"></div>
+      </section>
+
+      <section class="tool" id="captionTool">
+        <h2>4 · Caption</h2>
+        <label>Cover title
+          <input id="titleInput" type="text" maxlength="24" value="NEON COAST">
+        </label>
+        <label>Subtitle (script)
+          <input id="subtitleInput" type="text" maxlength="40" value="Vice City Nights">
+        </label>
+        <label>Badge ribbon
+          <input id="badgeInput" type="text" maxlength="18" value="VICE CITY">
+        </label>
+        <div class="row">
+          <label>Heat
+            <select id="heatSelect">
+              <option value="1">★ 1</option>
+              <option value="2">★★ 2</option>
+              <option value="3">★★★ 3</option>
+              <option value="4" selected>★★★★ 4</option>
+              <option value="5">★★★★★ 5</option>
+            </select>
+          </label>
+          <label class="check"><input id="halftoneToggle" type="checkbox" checked> Halftone title</label>
+        </div>
+      </section>
+
+      <section class="tool" id="panelTool">
+        <h2>5 · Selected panel</h2>
+        <p id="panelLabel" class="hint">Panel 1 of 9</p>
+        <label>Photo in this panel
+          <select id="panelPhotoSelect"></select>
+        </label>
+        <label>Zoom <span id="zoomValue">100%</span>
+          <input id="zoomSlider" type="range" min="100" max="300" value="100">
+        </label>
+        <div class="row">
+          <button id="flipBtn" type="button">⇄ Flip photo</button>
+          <button id="resetPanelBtn" type="button">Reset panel</button>
+        </div>
+      </section>
+
+      <section class="tool" id="exportTool">
+        <h2>6 · Export PNG</h2>
+        <button id="exportAllBtn" type="button" class="primary">⬇ Export all 3 sizes</button>
+        <div class="row export-sizes">
+          <button data-export="square" type="button">1080 × 1080</button>
+          <button data-export="portrait" type="button">1080 × 1350</button>
+          <button data-export="landscape" type="button">1920 × 1080</button>
+        </div>
+        <p class="hint">Exports are PNG files, saved straight to your downloads.</p>
+      </section>
+    </aside>
+  </main>
+
+  <footer id="steps">Step 1 add a photo · Step 2 pick a layout · Step 3 pick a grade · Step 4 write your caption · Step 5 export all sizes — free, offline, no upload.</footer>
+</div>
+
+<canvas id="shotCanvas" aria-hidden="true"></canvas>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
