@@ -1,61 +1,50 @@
-# Vice Cover Studio
+# Vice Cover Studio — GTA 6-style cover art maker
 
-![gta6-cover-art-01](https://make.fun/badge/gta6-cover-art-01.svg)
-![rank](https://make.fun/badge/gta6-cover-art-01/BGBug22/gta6-cover-art-01-entry/rank.svg)
-![reward](https://make.fun/badge/gta6-cover-art-01/BGBug22/gta6-cover-art-01-entry/reward.svg)
+[![make.fun](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/c/gta6-cover-art-01)
+[![rank](https://make.fun/badge/gta6-cover-art-01/BGBug22/gta6-cover-art-01-entry/rank.svg)](https://make.fun/c/gta6-cover-art-01)
+[![reward](https://make.fun/badge/gta6-cover-art-01/BGBug22/gta6-cover-art-01-entry/reward.svg)](https://make.fun/c/gta6-cover-art-01)
 
-A free offline web app that turns your photos and a caption into GTA 6-style
-cover art — the multi-panel poster look with bold lettering and a Vice City
-sunset / neon colour grade — exported as a PNG to share.
+Entry for the [gta6-cover-art-01 bounty on make.fun](https://make.fun/c/gta6-cover-art-01): a web app that turns your photo and a caption into GTA 6-style cover art — a multi-panel sunset-coast poster with bold gradient lettering — exported as a PNG to share.
 
-Built for the [gta6-cover-art-01 bounty](https://make.fun/c/gta6-cover-art-01)
-on make.fun.
+## What it does
 
-## How it works
+- **Any photo** — upload your own photos (they never leave your machine) or use the two built-in samples. Fill 4–6 panels with one photo or several.
+- **Crop and position each panel** — click a panel to select it, then drag its photo inside the panel, scroll to zoom, or use the zoom / focus sliders.
+- **Four layouts** — Hero Center, Hero Left, Hero Right, Six Split — each with character labels on the panels (`THE DRIVER`, `THE BOSS`, …).
+- **Four colour grades** — Sunset, Neon Nights, Golden Hour, Violet Dusk.
+- **Poster lettering** — a huge gradient title with a dark outline and retro stripes, a script subtitle, a five-star press quote on top, a tagline ribbon, a gold `ORIGINAL COVER ART` seal, a barcode and a credit strip.
+- **Fast and easy** — photo to PNG in a few taps, in all three post sizes: **1080×1080, 1080×1350, 1920×1080**.
+- **Fully offline** — static files under `app/`, no build step, no network request. Fonts are bundled OFL files; the sample photos were made with an image model for this app.
 
-1. **Add photos** — pick files from your machine, drag and drop them, or use
-   the two sample photos. Photos never leave your machine; the app makes no
-   network request at all.
-2. **Pick a layout** — 7 poster layouts: Nine-Panel Grid, Hero + Three,
-   Tilted Snapshots, Full-Bleed Hero, Split Sunset, Magazine Stack and
-   Six-Panel Strip.
-3. **Pick a colour grade** — 7 gradient-map grades (Vice Sunset, Neon Nights,
-   Golden Hour, Palm Noir, Hot Pink, Teal Dawn, Chrome Dusk), each with
-   vignette and film grain.
-4. **Write your caption** — a big display title, a script subtitle, a badge
-   ribbon, a five-star heat meter and an optional halftone dot title block.
-5. **Crop each panel** — click a panel, drag to pan, zoom with the slider,
-   flip it, or swap in another photo. Undo and redo are one key away.
-6. **Export** — one click exports all three post sizes at once
-   (1080 × 1080, 1080 × 1350, 1920 × 1080) as PNG files.
-
-## Run it
-
-Serve `app/` with any static file server and open `index.html` in desktop
-Chrome. No build step, no network, no upload.
+## Try it
 
 ```sh
-cd app && python3 -m http.server 8080
+node serve.ts   # serves app/ at http://localhost:8080
 ```
 
-## Files
+Or open `app/index.html` from any static server. Pick a layout and a grade, type your title, drag the photos where you want them, and hit Export.
 
-- `app/index.html` — the editor page
-- `app/style.css` — editor styles
-- `app/src/cover.js` — the cover engine: layouts, gradient-map grades,
-  halftone title block, PNG export
-- `app/src/main.js` — the editor: photos, panel picking and dragging,
-  undo/redo, query scenes, export
-- `app/fonts/` — Anton and Pacifico under the SIL Open Font License
-- `app/samples/` — two sample photos, free to use
-- `main.ts` — the entry program: copies `app/` and `screenshots/` to the
-  output directory and writes `dossier.json`
+## How it is built
+
+- `app/index.html` — the editor page (controls on the left, live preview on the right).
+- `app/style.css` — the dark neon editor UI.
+- `app/src/cover.js` — the cover renderer: panels, title, seal, barcode, palms (pure canvas 2D, deterministic — same state, same pixels).
+- `app/src/main.js` — page wiring: photo pool, panel editor, drag-to-pan, exports.
+- `app/src/shots.js` — fixed `?shot=` scenes so the screenshots are reproducible.
+- `app/fonts/` — Anton + Pacifico under the SIL Open Font License (`OFL.txt`).
+- `main.ts` — the entry program: copies `app/` and `screenshots/` to `/output` and writes `dossier.json` with the vendored make.fun library.
 
 ## Originality
 
-Everything here is original: the layout, the lettering (Anton and Pacifico,
-both SIL OFL) and the code. No Rockstar Games logo, wordmark, official
-artwork, character or font is used anywhere.
+100% original artwork and fictional names. No Rockstar Games logo, wordmark, official artwork, character or font is used anywhere. All names (titles, labels, papers, production credits) are invented for this app.
+
+## Verification (local, Playwright + Chromium)
+
+- 0 console errors, 0 page errors, 0 network requests (fully offline).
+- Playtest: retitle, switch layout + grade + size, export all three sizes — PNGs are exactly 1920×1080, 1080×1080 and 1080×1350.
+- Determinism: the same cover drawn twice is pixel-identical, and `main.ts` run 4× writes a byte-identical `dossier.json`.
+- Dossier: 1,219,439 bytes total (text capped at 163,840), 4 screenshots, each under 256 KiB.
+- `makefun check`: 4 passed / 0 failed, 17 skipped (transcript checks run on the sealed recordings at submission); the 5 at-submission items need the commit pushed to the public GitHub repo first.
 
 ## License
 
