@@ -42,9 +42,13 @@ Or open `app/index.html` from any static server. Pick a layout and a grade, type
 
 - 0 console errors, 0 page errors, 0 network requests (fully offline).
 - Playtest: retitle, switch layout + grade + size, export all three sizes — PNGs are exactly 1920×1080, 1080×1080 and 1080×1350.
-- Determinism: the same cover drawn twice is pixel-identical, and `main.ts` run 4× writes a byte-identical `dossier.json`.
-- Dossier: 1,219,439 bytes total (text capped at 163,840), 4 screenshots, each under 256 KiB.
+- Determinism: the same cover drawn twice is pixel-identical, and `main.ts` run 4× writes a byte-identical `dossier.json` (sha256 `a0d0f85b…`).
+- Dossier: 958,121 bytes total (text capped at 163,840), 4 screenshots, each under 256 KiB.
 - `makefun check`: 4 passed / 0 failed, 17 skipped (transcript checks run on the sealed recordings at submission); the 5 at-submission items need the commit pushed to the public GitHub repo first.
+
+## Final visual patch (20 Nov 2026)
+
+Five small fixes, no architecture change: (1) the title + subtitle + tagline block moved ~5% higher so the tagline pill clears the credit strip with a clean gap at all three export sizes; (2) panel crops now anchor to the top (fy ~0.16) with the focal x following the face (pier's fisherman left, boulevard's woman right), so heads and eyes are never cropped at the top or side; (3) a panel label that would sit on a face goes to the opposite top corner, and a bottom label that would slide under the tagline ribbon moves to the top instead; (4) a mild poster-ink grade (`saturate(1.15) contrast(1.07)`, a slightly stronger grade tint, a faint vignette) unifies the blue-sky and sunset photos into one poster while skin tones stay natural; (5) this README updated in the same session.
 
 ## License
 

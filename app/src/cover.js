@@ -13,26 +13,26 @@ export const SIZES = {
 export const GRADES = {
   sunset: {
     sky: '#2b1038',
-    tintTop: 'rgba(255,120,60,0.10)',
-    tintBottom: 'rgba(255,46,147,0.30)',
+    tintTop: 'rgba(255,120,60,0.13)',
+    tintBottom: 'rgba(255,46,147,0.34)',
     title: ['#FFE95C', '#FFB347', '#FF7A3D', '#FF2E93', '#B14BFF'],
   },
   neon: {
     sky: '#12082b',
-    tintTop: 'rgba(0,229,255,0.10)',
-    tintBottom: 'rgba(140,40,255,0.32)',
+    tintTop: 'rgba(0,229,255,0.13)',
+    tintBottom: 'rgba(140,40,255,0.35)',
     title: ['#8CFFF9', '#00E5FF', '#7A5CFF', '#FF2E93', '#FFD23D'],
   },
   golden: {
     sky: '#33170a',
-    tintTop: 'rgba(255,200,60,0.12)',
-    tintBottom: 'rgba(255,120,20,0.28)',
+    tintTop: 'rgba(255,200,60,0.14)',
+    tintBottom: 'rgba(255,120,20,0.32)',
     title: ['#FFF3A0', '#FFD23D', '#FF9A2E', '#FF5C1F', '#C2185B'],
   },
   violet: {
     sky: '#1c0b33',
-    tintTop: 'rgba(180,80,255,0.12)',
-    tintBottom: 'rgba(60,10,90,0.34)',
+    tintTop: 'rgba(180,80,255,0.14)',
+    tintBottom: 'rgba(60,10,90,0.37)',
     title: ['#FFD6FF', '#E08CFF', '#B14BFF', '#7A2EFF', '#FF2E93'],
   },
 };
@@ -124,7 +124,12 @@ export function drawPhotoInPanel(ctx, photo, rect, zoom, fx, fy) {
   const dh = ih * s;
   const ox = (rect.w - dw) * fx;
   const oy = (rect.h - dh) * fy;
+  // A mild poster-ink grade: a touch more saturation and contrast so the
+  // blue-sky and sunset photos read as one poster; mild enough that skin
+  // tones stay natural and faces stay clear.
+  try { ctx.filter = 'saturate(1.15) contrast(1.07) brightness(1.02)'; } catch (e) { /* older canvas: no filter */ }
   ctx.drawImage(photo, rect.x + ox, rect.y + oy, dw, dh);
+  try { ctx.filter = 'none'; } catch (e) { /* ignore */ }
 }
 
 /** A tiny palm silhouette: trunk plus five fronds, drawn at (x, y) with size s. */
@@ -292,6 +297,20 @@ export function drawCover(canvas, art, photos) {
   ctx.textAlign = 'center';
   ctx.fillText(vol, W - volW / 2 - W * 0.012, topH * 0.52);
 
+  // The tagline ribbon's rect, worked out up front: a panel label must not
+  // slide under it, so a bottom label that would intersect it is lifted to
+  // sit just above it instead.
+  const tagText = (art.tagline || '').trim().toUpperCase();
+  let tagRect = null;
+  if (tagText) {
+    const tSize = Math.max(11, W * 0.017);
+    ctx.font = `bold ${tSize}px Anton, sans-serif`;
+    try { ctx.letterSpacing = `${Math.max(1, W * 0.0015)}px`; } catch (e) { /* older canvas */ }
+    const tw = Math.min(W * 0.86, ctx.measureText(tagText).width + tSize * 2.4);
+    try { ctx.letterSpacing = '0px'; } catch (e) { /* ignore */ }
+    tagRect = { x: (W - tw) / 2, y: H * 0.826, w: tw, h: tSize * 2.1 };
+  }
+
   // Photo panels.
   rects.forEach((rect, i) => {
     const panel = art.panels[i] || {};
@@ -317,6 +336,14 @@ export function drawCover(canvas, art, photos) {
     tint.addColorStop(1, grade.tintBottom);
     ctx.fillStyle = tint;
     ctx.fillRect(0, 0, rect.w, rect.h);
+    // A faint vignette pulls the panels into one poster and deepens the ink;
+    // it is weakest at the centre, so faces (kept near the top by the focal
+    // anchor) are never darkened by it.
+    const vig = ctx.createRadialGradient(rect.w / 2, rect.h / 2, Math.min(rect.w, rect.h) * 0.35, rect.w / 2, rect.h / 2, Math.max(rect.w, rect.h) * 0.75);
+    vig.addColorStop(0, 'rgba(10,4,20,0)');
+    vig.addColorStop(1, 'rgba(10,4,20,0.14)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, rect.w, rect.h);
     ctx.restore();
     ctx.save();
     ctx.translate(rect.x + rect.w / 2, rect.y + rect.h / 2);
@@ -332,32 +359,63 @@ export function drawCover(canvas, art, photos) {
       ctx.font = `${lSize}px Anton, sans-serif`;
       const lw = ctx.measureText(label).width + lSize * 1.2;
       const lh = lSize * 1.9;
-      const lx = rect.x + rect.w * 0.03;
       // A bottom label under the centred title and subtitle would be hidden,
       // so a middle-column panel whose foot is in the title zone gets its
       // label at the top instead; side panels keep the bottom label.
       const centreX = rect.x + rect.w / 2;
       const inTitleZone = rect.y + rect.h > H * 0.62 && centreX > W * 0.25 && centreX < W * 0.75;
-      const ly = inTitleZone ? rect.y + rect.h * 0.04 : rect.y + rect.h - lh - rect.h * 0.04;
+      // A top label must never sit on the face: the face follows the panel's
+      // focal point, so the label goes in the opposite top corner (face on
+      // the left -> label top-right, face on the right -> label top-left).
+      const faceLeft = (panel.fx ?? 0.5) < 0.5;
+      let ly;
+      let lx;
+      let topRight = false;
+      if (inTitleZone) {
+        topRight = faceLeft;
+        ly = rect.y + rect.h * 0.04;
+        lx = topRight ? rect.x + rect.w - lw - rect.w * 0.03 : rect.x + rect.w * 0.03;
+      } else {
+        ly = rect.y + rect.h - lh - rect.h * 0.04;
+        lx = rect.x + rect.w * 0.03;
+        // A bottom label that would slide under the tagline ribbon (the tall
+        // hero panel of hero-right is the case) goes to the top in the
+        // face-opposite corner instead — lifting it would only push it into
+        // the script subtitle above the ribbon.
+        if (tagRect && lx < tagRect.x + tagRect.w && lx + lw > tagRect.x
+          && ly < tagRect.y + tagRect.h && ly + lh > tagRect.y) {
+          topRight = faceLeft;
+          ly = rect.y + rect.h * 0.04;
+          lx = topRight ? rect.x + rect.w - lw - rect.w * 0.03 : rect.x + rect.w * 0.03;
+        }
+      }
       ctx.fillStyle = 'rgba(10,4,20,0.88)';
       ctx.beginPath();
       ctx.roundRect(lx, ly, lw, lh, lh * 0.2);
       ctx.fill();
       ctx.fillStyle = '#FF2E93';
-      ctx.fillRect(lx, ly, lSize * 0.22, lh);
+      if (topRight) ctx.fillRect(lx + lw - lSize * 0.22, ly, lSize * 0.22, lh);
+      else ctx.fillRect(lx, ly, lSize * 0.22, lh);
       ctx.fillStyle = '#FFFFFF';
-      ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(label, lx + lSize * 0.5, ly + lh / 2 + 1);
+      if (topRight) {
+        ctx.textAlign = 'right';
+        ctx.fillText(label, lx + lw - lSize * 0.5, ly + lh / 2 + 1);
+      } else {
+        ctx.textAlign = 'left';
+        ctx.fillText(label, lx + lSize * 0.5, ly + lh / 2 + 1);
+      }
     }
   });
 
-  // The title, its script subtitle and the tagline ribbon.
-  const titleSize = drawTitle(ctx, art.title, W / 2, H * 0.8, W);
+  // The title, its script subtitle and the tagline ribbon. The whole block
+  // sits ~5% higher than the first draft so the tagline pill clears the
+  // credit strip with a clean gap at every export size.
+  const titleSize = drawTitle(ctx, art.title, W / 2, H * 0.75, W);
   const sub = (art.subtitle || '').trim();
   if (sub) {
     ctx.save();
-    ctx.translate(W / 2, H * 0.83);
+    ctx.translate(W / 2, H * 0.78);
     ctx.rotate(-0.035);
     ctx.font = `${Math.max(16, W * 0.046)}px Pacifico, cursive`;
     ctx.textAlign = 'center';
@@ -376,7 +434,7 @@ export function drawCover(canvas, art, photos) {
     const tw = Math.min(W * 0.86, ctx.measureText(tag).width + tSize * 2.4);
     const th = tSize * 2.1;
     const tx = (W - tw) / 2;
-    const ty = H * 0.876;
+    const ty = H * 0.826;
     ctx.fillStyle = 'rgba(8,3,16,0.94)';
     ctx.beginPath();
     ctx.roundRect(tx, ty, tw, th, th * 0.18);

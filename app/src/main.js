@@ -40,15 +40,27 @@ export function loadImage(url) {
   });
 }
 
-/** Fresh panel entries for a layout: photos cycle, crops vary per panel. */
+/** Focal defaults for one photo: both sample photos carry the face near the
+ *  top, so the anchor is the top (fy ~0.16) and fx follows the face — the
+ *  pier fisherman stands on the left, the boulevard woman on the right.
+ *  Uploads fall back to a centred top anchor. A modest zoom keeps the whole
+ *  head in frame instead of cropping it at the panel edge. */
+export function focusForPhoto(photoIdx) {
+  const name = (photos[photoIdx]?.name || '').toLowerCase();
+  if (name.startsWith('pier')) return { fx: 0.3, fy: 0.16, zoom: 1.05 };
+  if (name.startsWith('boulevard')) return { fx: 0.65, fy: 0.16, zoom: 1.05 };
+  return { fx: 0.5, fy: 0.16, zoom: 1.05 };
+}
+
+/** Fresh panel entries for a layout: photos cycle, each panel takes the focal
+ *  defaults of the photo it shows. */
 export function defaultPanels(layout) {
   const count = (LAYOUTS[layout] ?? LAYOUTS['hero-center']).panels.length;
-  const fx = [0.3, 0.5, 0.7, 0.5, 0.35, 0.65];
-  const fy = [0.4, 0.55, 0.35, 0.6, 0.45, 0.5];
-  const zoom = [1.15, 1.0, 1.25, 1.1, 1.0, 1.2];
   const out = [];
   for (let i = 0; i < count; i++) {
-    out.push({ photo: i % Math.max(1, photos.length), zoom: zoom[i % 6], fx: fx[i % 6], fy: fy[i % 6], label: PANEL_LABELS[i] });
+    const photo = i % Math.max(1, photos.length);
+    const f = focusForPhoto(photo);
+    out.push({ photo, zoom: f.zoom, fx: f.fx, fy: f.fy, label: PANEL_LABELS[i] });
   }
   return out;
 }
@@ -259,7 +271,11 @@ if (shot) {
       // ?photo= picks which sample leads the collage; panels cycle from it.
       const pick = (q.get('photo') || '').toLowerCase();
       const start = photos.findIndex((p) => p.name.toLowerCase().startsWith(pick));
-      if (start > 0) panels.forEach((p, i) => { p.photo = (start + i) % photos.length; });
+      if (start > 0) panels.forEach((p, i) => {
+        p.photo = (start + i) % photos.length;
+        const f = focusForPhoto(p.photo);
+        p.fx = f.fx; p.fy = f.fy; p.zoom = f.zoom;
+      });
       return {
         ...art,
         title: q.get('title') || art.title,
@@ -278,12 +294,16 @@ if (shot) {
     editorScene: async (q) => {
       const pick = q.get('photo') || 'pier';
       const hit = photos.findIndex((p) => p.name.toLowerCase().startsWith(pick));
-      if (hit >= 0) {
-        art.panels.forEach((p, i) => { p.photo = (hit + i) % photos.length; });
-      }
       if (q.get('title')) { art.title = q.get('title'); document.getElementById('title').value = art.title; }
       if (q.get('layout')) { art.layout = q.get('layout'); art.panels = defaultPanels(art.layout); }
       if (q.get('grade')) { art.grade = q.get('grade'); }
+      if (hit >= 0) {
+        art.panels.forEach((p, i) => {
+          p.photo = (hit + i) % photos.length;
+          const f = focusForPhoto(p.photo);
+          p.fx = f.fx; p.fy = f.fy; p.zoom = f.zoom;
+        });
+      }
     },
     redraw,
   });
