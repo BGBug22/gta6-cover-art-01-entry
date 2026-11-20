@@ -1,74 +1,135 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vice Cover Studio — GTA-style cover art maker</title>
-<link rel="icon" href="data:,">
-<link rel="stylesheet" href="./style.css">
+<title>Vice Cover Studio — turn any photo into a poster cover</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
-  <h1>VICE COVER STUDIO</h1>
-  <p>Your photo, your words — a sunset-coast poster cover in three taps.</p>
+  <div class="brand">
+    <span class="brand-mark">VC</span>
+    <div>
+      <h1>Vice Cover Studio</h1>
+      <p>Turn any photo into a multi-panel poster cover</p>
+    </div>
+  </div>
+  <div class="topbadges">
+    <span class="pill">100% offline</span>
+    <span class="pill">No upload, ever</span>
+  </div>
 </header>
-<main class="app">
-  <section class="controls" aria-label="Cover controls">
-    <h2>1 · Photos</h2>
-    <label class="row">Add your photos
-      <input id="photo" type="file" accept="image/*" multiple>
-    </label>
-    <p class="hint">Photos stay on your machine — nothing is uploaded. Click a photo below to put it in the selected panel, or drag a photo inside its panel to move it.</p>
-    <div id="pool" class="pool" aria-label="Photo pool"></div>
 
-    <h2>2 · Words</h2>
-    <label class="row">Title <input id="title" type="text" maxlength="24" value="PALM FEVER"></label>
-    <label class="row">Subtitle <input id="subtitle" type="text" maxlength="30" value="one last summer"></label>
-    <label class="row">Tagline <input id="tagline" type="text" maxlength="48" value="FIVE FRIENDS · ONE COAST · NO WAY BACK"></label>
-    <label class="row">Press quote <input id="quote" type="text" maxlength="48" value="PURE GOLDEN-HOUR MAYHEM"></label>
-    <label class="row">Paper <input id="paper" type="text" maxlength="28" value="THE HARBOR GAZETTE"></label>
-    <label class="row">Volume <input id="volume" type="text" maxlength="10" value="VOL. 1"></label>
-    <label class="row">Credit line <input id="credit" type="text" maxlength="64" value="A SUNSET PICTURES PRODUCTION · STARRING YOU"></label>
-
-    <h2>3 · Layout</h2>
-    <div class="choices" role="radiogroup" aria-label="Panel layout">
-      <label><input type="radio" name="layout" value="hero-center" checked> Hero Center</label>
-      <label><input type="radio" name="layout" value="hero-left"> Hero Left</label>
-      <label><input type="radio" name="layout" value="hero-right"> Hero Right</label>
-      <label><input type="radio" name="layout" value="six-split"> Six Split</label>
+<main class="workspace">
+  <section class="stage" aria-label="Cover preview">
+    <div class="stage-head">
+      <h2>Live preview</h2>
+      <span id="sizeLabel" class="size-label">1080 × 1080</span>
     </div>
-
-    <h2>4 · Colour grade</h2>
-    <div class="choices" role="radiogroup" aria-label="Colour grade">
-      <label><input type="radio" name="grade" value="sunset" checked> Sunset</label>
-      <label><input type="radio" name="grade" value="neon"> Neon Nights</label>
-      <label><input type="radio" name="grade" value="golden"> Golden Hour</label>
-      <label><input type="radio" name="grade" value="violet"> Violet Dusk</label>
+    <div class="canvas-wrap">
+      <canvas id="preview" width="720" height="720" aria-label="Live preview of your cover art"></canvas>
+      <p class="hint">Click a panel on the cover to select it, then crop it with the sliders.</p>
     </div>
-
-    <h2>5 · Panel</h2>
-    <p class="hint">Click a panel in the preview to select it, then tune it here.</p>
-    <div id="panel-editor" class="panel-editor"></div>
-
-    <h2>6 · Export</h2>
-    <div class="choices" role="radiogroup" aria-label="Preview size">
-      <label><input type="radio" name="size" value="wide" checked> Wide 1920×1080</label>
-      <label><input type="radio" name="size" value="square"> Square 1080×1080</label>
-      <label><input type="radio" name="size" value="portrait"> Portrait 1080×1350</label>
+    <div class="quick-export">
+      <button id="exportBtn" class="btn primary big">Download PNG</button>
+      <span id="statusLine" class="status" role="status">Pick a photo to start.</span>
     </div>
-    <div class="exports">
-      <button data-export="wide" type="button">Export 1920×1080</button>
-      <button data-export="square" type="button">Export 1080×1080</button>
-      <button data-export="portrait" type="button">Export 1080×1350</button>
-    </div>
-    <p id="status" role="status"></p>
-    <p class="fine">100% original artwork — no game logos, art or fonts. Photos are yours; the two samples were made with an image model for this app. Works fully offline.</p>
   </section>
-  <section class="stage" aria-label="Live preview">
-    <canvas id="cover" width="960" height="540" aria-label="The cover preview"></canvas>
-    <p class="hint">Drag inside a panel to move its photo · scroll over a panel to zoom · click a panel to edit it.</p>
-  </section>
+
+  <aside class="controls" aria-label="Cover controls">
+    <section class="card">
+      <h2>1 · Photo</h2>
+      <label class="file-btn" for="fileInput">Upload a photo
+        <input type="file" id="fileInput" accept="image/*">
+      </label>
+      <p class="or">or try a sample</p>
+      <div class="samples">
+        <button class="thumb-btn" id="sampleBoulevard" type="button">
+          <img src="samples/boulevard.jpg" alt="Sample photo: city boulevard at dusk">
+          <span>Boulevard</span>
+        </button>
+        <button class="thumb-btn" id="samplePier" type="button">
+          <img src="samples/pier.jpg" alt="Sample photo: pier over the sea">
+          <span>Pier</span>
+        </button>
+      </div>
+      <p class="note">Your photo stays in this browser. It is never uploaded anywhere.</p>
+    </section>
+
+    <section class="card">
+      <h2>2 · Caption</h2>
+      <label class="field">Title
+        <input id="titleInput" type="text" maxlength="24" value="NEON COAST" autocomplete="off">
+      </label>
+      <label class="field">Script line
+        <input id="subtitleInput" type="text" maxlength="48" value="a night in the city" autocomplete="off">
+      </label>
+      <label class="field">Tag line
+        <input id="tagInput" type="text" maxlength="32" value="SUMMER · 2026" autocomplete="off">
+      </label>
+    </section>
+
+    <section class="card">
+      <h2>3 · Layout</h2>
+      <div class="btn-grid" id="layoutBtns">
+        <button type="button" data-layout="hero">Hero<span>one big panel</span></button>
+        <button type="button" data-layout="duo" class="active">Duo<span>two panels</span></button>
+        <button type="button" data-layout="trio">Trio<span>three bands</span></button>
+        <button type="button" data-layout="grid">Grid<span>four panels</span></button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>4 · Colour grade</h2>
+      <div class="btn-grid grades" id="gradeBtns">
+        <button type="button" data-grade="sunset" class="active">Sunset<span>magenta dusk</span></button>
+        <button type="button" data-grade="neon">Neon<span>cyan nights</span></button>
+        <button type="button" data-grade="noir">Noir<span>high contrast</span></button>
+        <button type="button" data-grade="palms">Palms<span>teal &amp; gold</span></button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>5 · Crop the selected panel</h2>
+      <div class="panel-picker" id="panelPicker"></div>
+      <label class="field">Photo for this panel
+        <select id="panelSource">
+          <option value="main">Main photo</option>
+          <option value="boulevard">Boulevard sample</option>
+          <option value="pier">Pier sample</option>
+        </select>
+      </label>
+      <label class="field">Zoom
+        <input id="zoomRange" type="range" min="1" max="2.5" step="0.05" value="1">
+      </label>
+      <label class="field">Move sideways
+        <input id="oxRange" type="range" min="-1" max="1" step="0.05" value="0">
+      </label>
+      <label class="field">Move up &amp; down
+        <input id="oyRange" type="range" min="-1" max="1" step="0.05" value="0">
+      </label>
+      <button id="resetCropBtn" class="btn ghost" type="button">Reset this panel's crop</button>
+    </section>
+
+    <section class="card">
+      <h2>6 · Export size</h2>
+      <div class="btn-grid sizes" id="sizeBtns">
+        <button type="button" data-size="1080x1080" class="active">1080 × 1080<span>square post</span></button>
+        <button type="button" data-size="1080x1350">1080 × 1350<span>portrait post</span></button>
+        <button type="button" data-size="1920x1080">1920 × 1080<span>wide banner</span></button>
+      </div>
+      <p class="note">Exports a PNG at exactly the size shown — ready to post.</p>
+    </section>
+  </aside>
 </main>
-<script type="module" src="./src/main.js"></script>
+
+<footer class="foot">
+  <p>Vice Cover Studio — an offline cover maker. All art is drawn in your browser from your own photo.
+  Fonts Anton &amp; Pacifico are under the SIL Open Font License. No Rockstar artwork, logo or font is used.</p>
+</footer>
+
+<script type="module" src="src/main.js"></script>
+<noscript><p style="text-align:center;padding:1rem">Vice Cover Studio needs JavaScript to draw your cover.</p></noscript>
 </body>
 </html>
